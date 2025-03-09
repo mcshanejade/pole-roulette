@@ -35,4 +35,4 @@ Navigate to http://localhost:3000 to view and interact with your Pole Roulette a
 
 Future Updates
 
-This app is currently being developed. Stay tuned for additional features and enhancements! Contributions are welcome.
+This app is currently being developed. Stay tuned for additional features and enhancements!

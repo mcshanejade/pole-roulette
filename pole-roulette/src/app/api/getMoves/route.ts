@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const desiredLength = parseInt(searchParams.get("length") || "5");
   const filePath = path.join(process.cwd(), "data", "data.json");
 
   try {
@@ -11,11 +13,11 @@ export async function GET() {
     const polePairs = JSON.parse(jsonData);
 
     // Define the number of moves to generate in the routine
-    const routineLength = 5; // Change this number to adjust the sequence length
+    const routineLength = desiredLength; // Change this number to adjust the sequence length
 
     // Function to generate a sequence of moves
-    function generateRoutine(length) {
-      let routine = [];
+    function generateRoutine(length: number) {
+      let routine: any[] = [];
       let moveIds = [];
 
       // Randomly select the first move pair
@@ -32,19 +34,28 @@ export async function GET() {
         const maxAttempts = polePairs.length;
 
         while (attempts < maxAttempts) {
-            // Find the next pair where the first move matches the last move and the second move is not already in the routine
-          nextPair = polePairs.find((obj) => obj.pair[0] === lastMove && !routine.includes(obj.pair[1]));
+          // Find the next pair where the first move matches the last move and the second move is not already in the routine
+          nextPair = polePairs.find(
+            (obj: { pair: any[] }) =>
+              obj.pair[0] === lastMove && !routine.includes(obj.pair[1])
+          );
           if (nextPair) break;
           attempts++;
         }
-        if (!nextPair) break; // Stop if no matching move is found
+
+        // Stop when the routine is at chosen length or if no matching move is found
+        if (routine.length == length * 2 - 2 || !nextPair) {
+          break;
+        }
 
         routine.push(...nextPair.pair);
         moveIds.push(nextPair.id);
       }
 
       // Remove consecutive duplicate moves
-      routine = routine.filter((move, index, arr) => index === 0 || move !== arr[index - 1]);
+      routine = routine.filter(
+        (move, index, arr) => index === 0 || move !== arr[index - 1]
+      );
 
       return { routine, moveIds };
     }

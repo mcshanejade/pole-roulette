@@ -2,18 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+// Function to get the appropriate level for moves, returns array of level specific moves
+function getAppropriateLevelPairs(level: string, data: any[]) {
+  let routineDifficulty = [];
+
+  switch (level) {
+    case "Beginner":
+      routineDifficulty = ["Beginner"];
+      break;
+    case "Intermediate":
+      routineDifficulty = ["Beginner", "Intermediate"];
+      break;
+    case "Advanced":
+      routineDifficulty = ["Intermediate", "Advanced"];
+      break;
+    default:
+      routineDifficulty = ["Beginner"];
+      break;
+  }
+
+  return data.filter((obj: { level: string }) =>
+    routineDifficulty.includes(obj.level)
+  );
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const desiredLength = parseInt(searchParams.get("length") || "5");
+  const desiredLevel = searchParams.get("level") || "Beginner";
   const filePath = path.join(process.cwd(), "data", "data.json");
 
   try {
     // Read the JSON file
     const jsonData = fs.readFileSync(filePath, "utf-8");
-    const polePairs = JSON.parse(jsonData);
+
+    // Define the array of appropriate levels
+    const polePairs = getAppropriateLevelPairs(
+      desiredLevel,
+      JSON.parse(jsonData)
+    );
 
     // Define the number of moves to generate in the routine
-    const routineLength = desiredLength; // Change this number to adjust the sequence length
+    const routineLength = desiredLength;
 
     // Function to generate a sequence of moves
     function generateRoutine(length: number) {
@@ -64,9 +94,11 @@ export async function GET(req: NextRequest) {
     const { routine, moveIds } = generateRoutine(routineLength);
 
     return NextResponse.json({
+      // Output all data for testing purposes
       success: true,
       routine,
-      moveIds, // Output the sequence of move IDs for testing
+      moveIds,
+      polePairs,
     });
   } catch (error) {
     return NextResponse.json(

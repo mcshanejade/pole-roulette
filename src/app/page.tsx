@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HeroUIProvider } from "@heroui/system";
 import { Button, Spacer } from "@heroui/react";
 import MovesSlider from "../components/ui/slider";
 import RoutineRadioGroup from "../components/ui/radio-group";
+import FeaturedMoveDropdown from "@/components/ui/dropdown";
 
 interface Move {
   name: string;
@@ -16,6 +17,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [numMoves, setNumMoves] = useState<number>(4);
   const [level, setLevel] = useState<string>("Beginner");
+  const [featuredMove, setFeaturedMove] = useState<string>("");
+  const [featuredMoveOptions, setFeaturedMoveOptions] = useState<string[]>([]);
 
   const fetchMoves = () => {
     setLoading(true);
@@ -33,6 +36,28 @@ export default function Home() {
       .finally(() => setLoading(false));
   };
 
+  const fetchFeaturedMoveOptions = () => {
+    setLoading(true);
+    setError(null); // Reset error state before making the request
+    fetch(`/api/getFeaturedMoveOptions/?level=${level}`) // Fetch the featured move options based on the level
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setFeaturedMoveOptions(data.featuredMoves);
+        } else {
+          setError("Failed to load featured moves");
+        }
+      })
+      .catch(() => setError("Error fetching data"))
+      .finally(() => setLoading(false));
+  };
+
+  // Listens for changes to the level state and fetches the featured move options to update the dropdown
+  useEffect(() => {
+    fetchFeaturedMoveOptions();
+    setFeaturedMove("");
+  }, [level]);
+
   return (
     <HeroUIProvider>
       <main className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -48,6 +73,17 @@ export default function Home() {
 
         <div className="flex flex-col gap-6 w-full max-w-md">
           <MovesSlider setNumMoves={setNumMoves} />
+        </div>
+
+        <div>
+          <Spacer y={5}></Spacer>
+        </div>
+
+        <div className="flex flex-col gap-6 w-full max-w-md">
+          <FeaturedMoveDropdown
+            setFeaturedMove={setFeaturedMove}
+            featuredMoveOptions={featuredMoveOptions}
+          />
         </div>
 
         <div>

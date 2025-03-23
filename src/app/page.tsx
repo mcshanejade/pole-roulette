@@ -15,15 +15,22 @@ export default function Home() {
   const [moves, setMoves] = useState<Move[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [numMoves, setNumMoves] = useState<number>(4);
+  const [numMoves, setNumMoves] = useState<number>(3);
   const [level, setLevel] = useState<string>("Beginner");
   const [featuredMove, setFeaturedMove] = useState<string>("");
   const [featuredMoveOptions, setFeaturedMoveOptions] = useState<string[]>([]);
 
   const fetchMoves = () => {
     setLoading(true);
-    setError(null); // Reset error state before making the request
-    fetch(`/api/getMoves/?length=${numMoves}&level=${level}`) // Pass the numMoves and level as query parameters
+    // Reset error state before making the request
+    setError(null);
+    // Pass the numMoves, level and featureMove as query parameters to the API
+    fetch(
+      `/api/getRoutine/?length=${numMoves}&level=${level}&featuredMove=${featuredMove.replaceAll(
+        " ",
+        "_"
+      )}`
+    )
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
